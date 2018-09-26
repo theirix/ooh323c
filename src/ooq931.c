@@ -72,17 +72,17 @@ EXTERN int ooQ931Decode (OOH323CallData *call,
 
    /* Have preamble, start getting the informationElements into buffers */
    offset = 5;
-   while (offset < length) {
+   while (offset + 1 < length) {
       Q931InformationElement *ie;
       int ieOff = offset;
       /* Get field discriminator */
       int discriminator = data[offset++];
 
       /* For discriminator with high bit set there is no data */
-      if ((discriminator & 0x80) == 0) {
+      if ((discriminator & 0x80) == 0 && offset + 1 < length) {
          int len = data[offset++], alen;
 
-         if (discriminator == Q931UserUserIE) {
+         if (discriminator == Q931UserUserIE && offset + 1 < length) {
             /* Special case of User-user field, there is some confusion here as
                the Q931 documentation claims the length is a single byte,
                unfortunately all H.323 based apps have a 16 bit length here, so
@@ -173,12 +173,17 @@ EXTERN int ooQ931Decode (OOH323CallData *call,
       if(ie->discriminator == Q931CallingPartyNumberIE)
       {
          OOTRACEDBGB1("   CallingPartyNumber IE = {\n");
-         if(ie->length < OO_MAX_NUMBER_LENGTH)
+         if(ie->length > 0 && ie->length < OO_MAX_NUMBER_LENGTH)
          {
             int numoffset=1;
             if(!(0x80 & ie->data[0])) numoffset = 2;
-            memcpy(number, ie->data+numoffset,ie->length-numoffset);
-            number[ie->length-numoffset]='\0';
+            if (offset < ie->length)
+            {
+              memcpy(number, ie->data+numoffset,ie->length-numoffset);
+              number[ie->length-numoffset]='\0';
+            } else {
+              number[0]='\0';
+            }
             OOTRACEDBGB2("      %s\n", number);
             if(!call->callingPartyNumber)
                ooCallSetCallingPartyNumber(call, number);
@@ -194,7 +199,7 @@ EXTERN int ooQ931Decode (OOH323CallData *call,
       if(ie->discriminator == Q931CalledPartyNumberIE)
       {
          OOTRACEDBGB1("   CalledPartyNumber IE = {\n");
-         if(ie->length < OO_MAX_NUMBER_LENGTH)
+         if(ie->length > 0 && ie->length < OO_MAX_NUMBER_LENGTH)
          {
             memcpy(number, ie->data+1,ie->length-1);
             number[ie->length-1]='\0';
