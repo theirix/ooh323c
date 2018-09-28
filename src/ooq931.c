@@ -591,6 +591,12 @@ int ooDecodeUUIE(Q931Message *q931Msg)
    }
    memset(q931Msg->userInfo, 0, sizeof(H225H323_UserInformation));
 
+   if (ie->length <= 0)
+   {
+     OOTRACEERR1("ERROR:Memory - ooDecodeUUIE - wrong length\n");
+     return OO_FAILED;
+   }
+
    setPERBuffer (pctxt, ie->data, ie->length, aligned);
 
    stat = asn1PD_H225H323_UserInformation (pctxt, q931Msg->userInfo);
