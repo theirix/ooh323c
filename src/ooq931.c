@@ -177,7 +177,7 @@ EXTERN int ooQ931Decode (OOH323CallData *call,
          {
             int numoffset=1;
             if(!(0x80 & ie->data[0])) numoffset = 2;
-            if (offset < ie->length)
+            if (numoffset < ie->length)
             {
               memcpy(number, ie->data+numoffset,ie->length-numoffset);
               number[ie->length-numoffset]='\0';
